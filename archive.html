@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive Utility by wicorn29</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #0056b3;
+            border-bottom: 1px solid #cceeff;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        .data-section {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .data-section ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .data-section li {
+            margin-bottom: 8px;
+            padding: 6px 0;
+        }
+        .data-section li label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        .data-section li input[type="checkbox"] {
+            margin-right: 10px;
+            transform: scale(1.2); /* Make checkbox slightly larger */
+        }
+        .empty-message {
+            color: #666;
+            font-style: italic;
+            padding: 10px;
+        }
+        .download-section {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #e0f7fa;
+            border: 1px solid #b2ebf2;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex; /* Use flexbox for layout */
+            flex-direction: column; /* Stack items vertically */
+            align-items: center; /* Center items horizontally */
+        }
+        .download-button {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 25px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 15px; /* Added margin to separate from other options */
+        }
+        .download-button:hover {
+            background-color: #218838;
+        }
+        #selectDeselectAll {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            font-size: 1em;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #selectDeselectAll:hover {
+            background-color: #0056b3;
+        }
+
+        /* Styling for the details/summary (advanced options) */
+        details {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        summary {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #0056b3;
+            cursor: pointer;
+            outline: none;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+            display: block;
+        }
+        summary::-webkit-details-marker {
+            display: none;
+        }
+        summary::before {
+            content: '►';
+            display: inline-block;
+            margin-right: 10px;
+            transition: transform 0.2s;
+        }
+        details[open] summary::before {
+            transform: rotate(90deg);
+        }
+
+        /* Encryption and Chromebrew options group styles */
+        .options-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            width: 100%;
+        }
+        .options-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+        .options-group input[type="checkbox"] {
+            transform: scale(1.1);
+            margin-right: 8px;
+        }
+        .options-group input[type="password"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            width: 200px;
+        }
+        .password-input-wrapper.hidden {
+            display: none;
+        }
+
+        /* --- Loading Overlay Styles --- */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #loadingOverlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .spinner {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-container {
+            width: 80%;
+            max-width: 400px;
+            background-color: #f3f3f3;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        #progressBar {
+            width: 0%;
+            height: 25px;
+            background-color: #4CAF50;
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.3s ease-in-out;
+        }
+        #progressText {
+            color: white;
+            margin-top: 10px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Archive Utility <small>by wicorn29</small></h1>
+
+    <div class="download-section">
+        <h2>Download Archived Data</h2>
+        <p>Click the button below to download all selected data as a `.cbook` file.</p>
+
+        <div class="options-group">
+            <label for="encryptCheckbox">
+                <input type="checkbox" id="encryptCheckbox">
+                Encrypt with Password:
+            </label>
+            <div id="passwordInputWrapper" class="password-input-wrapper hidden">
+                <input type="password" id="passwordInput" placeholder="Enter password" disabled>
+            </div>
+        </div>
+
+        <div class="options-group">
+            <label for="chromebrewCheckbox">
+                <input type="checkbox" id="chromebrewCheckbox">
+                Backup Chromebrew data (optional)
+            </label>
+        </div>
+
+        <button id="downloadBtn" class="download-button">Download .cbook File</button>
+    </div>
+
+    <details> <summary>Advanced Archive Options</summary>
+        <button id="selectDeselectAll">Select/Deselect All</button>
+
+        <h2>Local Storage Items</h2>
+        <div id="localStorageContent" class="data-section">
+            <p class="empty-message">Scanning local storage...</p>
+        </div>
+
+        <h2>Cookies</h2>
+        <div id="cookieContent" class="data-section">
+            <p class="empty-message">Scanning cookies...</p>
+        </div>
+    </details>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="progress-container">
+            <div id="progressBar"></div>
+        </div>
+        <div id="progressText">Preparing your archive...</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to Base64 encode a string
+            function base64Encode(str) {
+                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                    function toSolidBytes(match, p1) {
+                        return String.fromCharCode('0x' + p1);
+                    }));
+            }
+
+            // --- Elements for Loading Overlay ---
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            // --- Data Storage ---
+            const allLocalStorageData = {};
+            const allCookieData = {};
+
+            // --- Scan Local Storage ---
+            const localStorageDiv = document.getElementById('localStorageContent');
+            let localStorageKeysHtml = '';
+
+            if (localStorage.length === 0) {
+                localStorageKeysHtml = '<p class="empty-message">Local storage is empty for this domain.</p>';
+            } else {
+                localStorageKeysHtml = '<ul>';
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    allLocalStorageData[key] = value;
+                    localStorageKeysHtml += `
+                        <li>
+                            <label>
+                                <input type="checkbox" class="localStorageCheckbox" data-key="${key}" checked>
+                                ${key}
+                            </label>
+                        </li>
+                    `;
+                }
+                localStorageKeysHtml += '</ul>';
+            }
+            localStorageDiv.innerHTML = localStorageKeysHtml;
+
+            // --- Scan Cookies ---
+            const cookieDiv = document.getElementById('cookieContent');
+            let cookieKeysHtml = '';
+
+            const cookies = document.cookie;
+
+            if (cookies === "") {
+                cookieKeysHtml = '<p class="empty-message">No cookies found for this domain.</p>';
+            } else {
+                const cookieArray = cookies.split(';');
+                cookieKeysHtml = '<ul>';
+                cookieArray.forEach(cookie => {
+                    const trimmedCookie = cookie.trim();
+                    const parts = trimmedCookie.split('=');
+                    const name = decodeURIComponent(parts[0]);
+                    const value = decodeURIComponent(parts.slice(1).join('='));
+                    allCookieData[name] = value;
+                    cookieKeysHtml += `
+                        <li>
+                            <label>
+                                <input type="checkbox" class="cookieCheckbox" data-key="${name}" checked>
+                                ${name}
+                            </label>
+                        </li>
+                    `;
+                });
+                cookieKeysHtml += '</ul>';
+            }
+            cookieDiv.innerHTML = cookieKeysHtml;
+
+            // --- Select/Deselect All Functionality ---
+            const selectDeselectAllBtn = document.getElementById('selectDeselectAll');
+            let allAreCurrentlySelected = true;
+
+            selectDeselectAllBtn.addEventListener('click', function() {
+                allAreCurrentlySelected = !allAreCurrentlySelected;
+                const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+                allCheckboxes.forEach(checkbox => {
+                    if (checkbox.id !== 'encryptCheckbox' && checkbox.id !== 'chromebrewCheckbox') {
+                        checkbox.checked = allAreCurrentlySelected;
+                    }
+                });
+            });
+
+            // --- Encryption Options Functionality ---
+            const encryptCheckbox = document.getElementById('encryptCheckbox');
+            const passwordInput = document.getElementById('passwordInput');
+            const passwordInputWrapper = document.getElementById('passwordInputWrapper');
+
+            encryptCheckbox.addEventListener('change', function() {
+                if (encryptCheckbox.checked) {
+                    passwordInputWrapper.classList.remove('hidden');
+                    passwordInput.disabled = false;
+                    passwordInput.focus();
+                } else {
+                    passwordInputWrapper.classList.add('hidden');
+                    passwordInput.disabled = true;
+                    passwordInput.value = '';
+                }
+            });
+
+            // --- Chromebrew Option ---
+            const chromebrewCheckbox = document.getElementById('chromebrewCheckbox');
+
+            // --- Download functionality ---
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.addEventListener('click', function() {
+                // Show loading overlay
+                loadingOverlay.classList.add('visible');
+                progressBar.style.width = '0%';
+                progressText.textContent = 'Preparing your archive...';
+
+                // Simulate progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    if (progress <= 100) {
+                        progressBar.style.width = `${progress}%`;
+                        progressText.textContent = `Archiving: ${progress}%`;
+                    }
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        progressText.textContent = 'Download starting...';
+                        setTimeout(initiateDownload, 500); // Wait a bit before starting actual download
+                    }
+                }, 150); // Adjust speed of fake loading
+
+                function initiateDownload() {
+                    const selectedArchivedData = {
+                        metadata: {
+                            archiveDate: new Date().toISOString(),
+                            origin: window.location.origin,
+                            generator: "Archive Utility by wicorn29",
+                            formatVersion: "1.1"
+                        },
+                        localStorage: {},
+                        cookies: {}
+                    };
+
+                    // Add encryption data if selected
+                    if (encryptCheckbox.checked) {
+                        const password = passwordInput.value;
+                        if (password) {
+                            selectedArchivedData.metadata.encryption = {
+                                method: "Base64",
+                                password: base64Encode(password)
+                            };
+                        } else {
+                            alert("Please enter a password for encryption.");
+                            loadingOverlay.classList.remove('visible'); // Hide overlay if error
+                            return;
+                        }
+                    }
+
+                    // Add Chromebrew flag if selected
+                    if (chromebrewCheckbox.checked) {
+                        selectedArchivedData.chromebrew = true;
+                    }
+
+                    // Get selected Local Storage items
+                    document.querySelectorAll('.localStorageCheckbox:checked').forEach(checkbox => {
+                        const key = checkbox.dataset.key;
+                        if (allLocalStorageData[key] !== undefined) {
+                            selectedArchivedData.localStorage[key] = allLocalStorageData[key];
+                        }
+                    });
+
+                    // Get selected Cookie items
+                    document.querySelectorAll('.cookieCheckbox:checked').forEach(checkbox => {
+                        const key = checkbox.dataset.key;
+                        if (allCookieData[key] !== undefined) {
+                            selectedArchivedData.cookies[key] = allCookieData[key];
+                        }
+                    });
+
+                    const dataStr = JSON.stringify(selectedArchivedData, null, 2);
+                    const blob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `archive_data_${new Date().toISOString().slice(0,10)}.cbook`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+
+                    // Hide loading overlay after download is initiated
+                    setTimeout(() => {
+                        loadingOverlay.classList.remove('visible');
+                    }, 1000); // Give a moment for the download to register
+                }
+            });
+        });
+    </script>
+</body>
+</html>
