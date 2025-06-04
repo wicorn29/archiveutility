@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WIcorn29 Archive Restore</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+            font-size: 1.1em;
+        }
+        .input-group input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: calc(100% - 22px); /* Account for padding/border */
+            max-width: 300px;
+            margin-right: 10px;
+        }
+        .input-group button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .input-group button:hover {
+            background-color: #0056b3;
+        }
+
+        #restoreResults {
+            margin-top: 30px;
+            text-align: left;
+            border-top: 1px dashed #ccc;
+            padding-top: 20px;
+        }
+        #restoreResults h3 {
+            color: #0056b3;
+            margin-bottom: 10px;
+        }
+        #restoreResults ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        #restoreResults li {
+            margin-bottom: 5px;
+            word-wrap: break-word;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .message.info {
+            background-color: #e2f2ff;
+            color: #0d6efd;
+            border: 1px solid #b7d8ff;
+        }
+        .password-prompt {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border: 1px solid #bce8f1;
+            border-radius: 5px;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        .password-prompt input[type="password"] {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+            width: calc(100% - 24px);
+            max-width: 250px;
+        }
+        .password-prompt button {
+            padding: 8px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .password-prompt button:hover {
+            background-color: #218838;
+        }
+
+        /* Confirmation Modal Styles */
+        #confirmationModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden; /* Hidden by default */
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #confirmationModal.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            text-align: left;
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-content h3 {
+            color: #d9534f; /* Danger red */
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.4em;
+        }
+        .modal-content p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: 1em;
+        }
+        .modal-content strong {
+            color: #d9534f;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end; /* Align buttons to the right */
+            gap: 10px;
+            margin-top: 25px;
+        }
+        .modal-buttons button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .modal-buttons #confirmRestoreBtn {
+            background-color: #d9534f; /* Danger red for confirm */
+            color: white;
+            border: none;
+        }
+        .modal-buttons #confirmRestoreBtn:hover {
+            background-color: #c9302c;
+        }
+        .modal-buttons #cancelRestoreBtn {
+            background-color: #6c757d; /* Grey for cancel */
+            color: white;
+            border: none;
+        }
+        .modal-buttons #cancelRestoreBtn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <h1>WIcorn29 Archive Restore Utility</h1>
+
+    <div class="container">
+        <p>Upload your `.cbook` file to restore Local Storage and Cookie data.</p>
+
+        <div class="input-group">
+            <label for="cbookFileInput">Select .cbook Archive File:</label>
+            <input type="file" id="cbookFileInput" accept=".cbook, .json">
+            <button id="restoreBtn">Restore Data</button>
+        </div>
+
+        <div id="statusMessage" class="message" style="display: none;"></div>
+
+        <div id="passwordPrompt" class="password-prompt">
+            <p>This archive is encrypted. Please enter the password:</p>
+            <input type="password" id="restorePasswordInput" placeholder="Enter password">
+            <button id="confirmPasswordBtn">Confirm</button>
+        </div>
+
+        <div id="restoreResults">
+            </div>
+    </div>
+
+    <div id="confirmationModal">
+        <div class="modal-content">
+            <h3>&#9888; Security Warning: Confirm Data Restore &#9888;</h3>
+            <p>You are about to restore data from an external archive file. Please proceed with extreme caution!</p>
+            <p><strong>ONLY RESTORE ARCHIVES YOU HAVE CREATED YOURSELF.</strong></p>
+            <p>Restoring an archive from an unknown or untrusted source can pose significant security risks, including:</p>
+            <ul>
+                <li><strong>Malicious Code Injection:</strong> Harmful scripts could be stored in Local Storage and executed.</li>
+                <li><strong>Account Takeover:</strong> Malicious cookies could allow unauthorized access to your accounts.</li>
+                <li><strong>Data Loss/Corruption:</strong> Your existing Local Storage or cookie data could be overwritten with undesirable or harmful content.</li>
+            </ul>
+            <p>By clicking "Confirm Restore," you acknowledge and accept these risks.</p>
+            <div class="modal-buttons">
+                <button id="cancelRestoreBtn">Cancel</button>
+                <button id="confirmRestoreBtn">Confirm Restore</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to Base64 encode a string (for comparing user input)
+            function base64Encode(str) {
+                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                    function toSolidBytes(match, p1) {
+                        return String.fromCharCode('0x' + p1);
+                    }));
+            }
+
+            const cbookFileInput = document.getElementById('cbookFileInput');
+            const restoreBtn = document.getElementById('restoreBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const restoreResults = document.getElementById('restoreResults');
+            const passwordPrompt = document.getElementById('passwordPrompt');
+            const restorePasswordInput = document.getElementById('restorePasswordInput');
+            const confirmPasswordBtn = document.getElementById('confirmPasswordBtn');
+
+            // Confirmation Modal Elements
+            const confirmationModal = document.getElementById('confirmationModal');
+            const modalConfirmBtn = document.getElementById('confirmRestoreBtn');
+            const modalCancelBtn = document.getElementById('cancelRestoreBtn');
+
+            let parsedCbookData = null; // To store data parsed from the file
+
+            function showMessage(msg, type = 'info') {
+                statusMessage.textContent = msg;
+                statusMessage.className = `message ${type}`;
+                statusMessage.style.display = 'block';
+            }
+
+            function clearMessage() {
+                statusMessage.textContent = '';
+                statusMessage.className = 'message';
+                statusMessage.style.display = 'none';
+            }
+
+            function processRestore() {
+                restoreResults.innerHTML = ''; // Clear previous results
+                clearMessage();
+
+                if (!parsedCbookData) {
+                    showMessage("No data to restore. Please upload a .cbook file first.", 'error');
+                    return;
+                }
+
+                let restoredCount = { localStorage: 0, cookies: 0 };
+                let resultsHtml = '';
+
+                // --- Restore Local Storage ---
+                if (parsedCbookData.localStorage && Object.keys(parsedCbookData.localStorage).length > 0) {
+                    resultsHtml += '<h3>Local Storage Restored:</h3><ul>';
+                    for (const key in parsedCbookData.localStorage) {
+                        if (Object.prototype.hasOwnProperty.call(parsedCbookData.localStorage, key)) {
+                            const value = parsedCbookData.localStorage[key];
+                            try {
+                                localStorage.setItem(key, value);
+                                resultsHtml += `<li><strong>${key}:</strong> Successfully restored.</li>`;
+                                restoredCount.localStorage++;
+                            } catch (e) {
+                                resultsHtml += `<li><strong>${key}:</strong> Failed to restore (Error: ${e.message}).</li>`;
+                            }
+                        }
+                    }
+                    resultsHtml += '</ul>';
+                } else {
+                    resultsHtml += '<p>No Local Storage data found in archive.</p>';
+                }
+
+                // --- Restore Cookies ---
+                if (parsedCbookData.cookies && Object.keys(parsedCbookData.cookies).length > 0) {
+                    resultsHtml += '<h3>Cookies Restored:</h3><ul>';
+                    resultsHtml += '<p style="font-style: italic; font-size: 0.9em;">(Note: Cookies are set for the current domain and path `/`. Original expiration dates/domains are not preserved as they are not stored in this archive format.)</p>';
+                    for (const key in parsedCbookData.cookies) {
+                        if (Object.prototype.hasOwnProperty.call(parsedCbookData.cookies, key)) {
+                            const value = parsedCbookData.cookies[key];
+                            try {
+                                // Set cookie as a session cookie for the current path
+                                document.cookie = `${encodeURIComponent(key)}=${encodeURIComponent(value)}; path=/`;
+                                resultsHtml += `<li><strong>${key}:</strong> Successfully restored.</li>`;
+                                restoredCount.cookies++;
+                            } catch (e) {
+                                resultsHtml += `<li><strong>${key}:</strong> Failed to restore (Error: ${e.message}).</li>`;
+                            }
+                        }
+                    }
+                    resultsHtml += '</ul>';
+                } else {
+                    resultsHtml += '<p>No Cookie data found in archive.</p>';
+                }
+
+                // --- Handle Chromebrew flag ---
+                if (parsedCbookData.chromebrew === true) {
+                    resultsHtml += '<p style="font-weight: bold; color: #28a745;">Chromebrew data flag detected in archive.</p>';
+                }
+
+                restoreResults.innerHTML = resultsHtml;
+                if (restoredCount.localStorage > 0 || restoredCount.cookies > 0) {
+                    showMessage(`Restore complete! ${restoredCount.localStorage} Local Storage items and ${restoredCount.cookies} cookies restored.`, 'success');
+                } else {
+                    showMessage("Archive processed, but no data was restored (or archive was empty).", 'info');
+                }
+            }
+
+            // Main restore button click handler
+            restoreBtn.addEventListener('click', function() {
+                const file = cbookFileInput.files[0];
+                if (!file) {
+                    showMessage("Please select a .cbook file to restore.", 'error');
+                    return;
+                }
+
+                clearMessage();
+                passwordPrompt.style.display = 'none';
+                restorePasswordInput.value = '';
+
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    try {
+                        const fileContent = e.target.result;
+                        parsedCbookData = JSON.parse(fileContent);
+
+                        // Check for encryption
+                        if (parsedCbookData.metadata && parsedCbookData.metadata.encryption && parsedCbookData.metadata.encryption.password) {
+                            passwordPrompt.style.display = 'flex';
+                            restorePasswordInput.focus();
+                            showMessage("Archive is encrypted. Please enter the password.", 'info');
+
+                            // Attach handler to confirm button for password check
+                            confirmPasswordBtn.onclick = function() { // Re-attach to avoid multiple listeners
+                                const userPassword = restorePasswordInput.value;
+                                if (!userPassword) {
+                                    showMessage("Password cannot be empty.", 'error');
+                                    return;
+                                }
+
+                                const encodedUserPassword = base64Encode(userPassword);
+                                if (encodedUserPassword === parsedCbookData.metadata.encryption.password) {
+                                    passwordPrompt.style.display = 'none';
+                                    restorePasswordInput.value = '';
+                                    // Password correct, now show confirmation modal
+                                    confirmationModal.classList.add('visible');
+                                } else {
+                                    showMessage("Incorrect password.", 'error');
+                                }
+                            };
+
+                        } else {
+                            // No encryption, directly show confirmation modal
+                            confirmationModal.classList.add('visible');
+                        }
+
+                    } catch (error) {
+                        showMessage(`Error reading or parsing file: ${error.message}`, 'error');
+                        console.error("File parsing error:", error);
+                        parsedCbookData = null; // Clear data if parsing fails
+                    }
+                };
+
+                reader.onerror = function(e) {
+                    showMessage(`File reading error: ${e.target.error.name}`, 'error');
+                    console.error("FileReader error:", e.target.error);
+                    parsedCbookData = null; // Clear data if reading fails
+                };
+
+                reader.readAsText(file);
+            });
+
+            // Confirmation Modal Button Handlers
+            modalConfirmBtn.addEventListener('click', function() {
+                confirmationModal.classList.remove('visible'); // Hide modal
+                processRestore(); // Proceed with the actual restore
+            });
+
+            modalCancelBtn.addEventListener('click', function() {
+                confirmationModal.classList.remove('visible'); // Hide modal
+                showMessage("Restore cancelled.", 'info');
+                parsedCbookData = null; // Clear data to prevent accidental restore later
+                cbookFileInput.value = ''; // Clear file input
+            });
+        });
+    </script>
+</body>
+</html>
